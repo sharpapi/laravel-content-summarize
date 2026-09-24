@@ -89,9 +89,12 @@ class SummarizeController extends Controller
      */
     public function summarizeText(string $text)
     {
-        $result = $this->summarizeService->summarize($text);
-        
-        return response()->json($result);
+        // summarize() returns a status URL; fetchResults() polls until the job is done.
+        // In production, run this in a queued job rather than an HTTP request.
+        $statusUrl = $this->summarizeService->summarize($text);
+        $job = $this->summarizeService->fetchResults($statusUrl);
+
+        return response()->json(['summary' => $job->result->summary ?? null]);
     }
 
     /**
@@ -99,14 +102,11 @@ class SummarizeController extends Controller
      */
     public function summarizeWithOptions(string $text)
     {
-        $options = [
-            'max_length' => 200,
-            'language' => 'en',
-        ];
-        
-        $result = $this->summarizeService->summarize($text, $options);
-        
-        return response()->json($result);
+        // Options are positional: language (full name), max length, voice tone, context
+        $statusUrl = $this->summarizeService->summarize($text, 'English', 200, 'neutral');
+        $job = $this->summarizeService->fetchResults($statusUrl);
+
+        return response()->json(['summary' => $job->result->summary ?? null]);
     }
 }
 ```
@@ -121,7 +121,7 @@ Example:
 use GuzzleHttp\Exception\ClientException;
 
 try {
-    $result = $this->summarizeService->summarize($longText);
+    $statusUrl = $this->summarizeService->summarize($longText);
 } catch (ClientException $e) {
     echo $e->getMessage();
 }
@@ -157,6 +157,18 @@ SHARP_API_BASE_URL=https://sharpapi.com/api/v1
     }
 }
 ```
+
+## AI agents (Laravel Boost)
+
+This package ships a [Laravel Boost](https://github.com/laravel/boost) skill, `sharpapi-content-summarize`. It teaches AI coding agents the async submit-then-`fetchResults()` flow, the queued-job recipe, the result shape and the testing approach. Boost 2 or newer is required. In your app:
+
+```bash
+composer require laravel/boost --dev
+php artisan boost:install          # first time
+php artisan boost:update --discover # already using Boost
+```
+
+Select `sharpapi/laravel-content-summarize` when Boost lists the packages it found. The skill loads on demand; no always-on guideline is added.
 
 ---
 
