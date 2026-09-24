@@ -37,13 +37,18 @@ class ContentSummarizeService extends SharpApiClient
                 'sharpapi-content-summarize.api_job_status_polling_wait',
                 180)
         );
+        $this->setUseCustomInterval(
+            (bool) config(
+                'sharpapi-content-summarize.api_job_status_use_polling_interval',
+                false)
+        );
         $this->setUserAgent('SharpAPILaravelContentSummarize/1.0.0');
     }
 
     /**
      * Summarizes the provided text while maintaining its key points.
      * Perfect for creating concise versions of longer content.
-     * 
+     *
      * Only the `content` parameter is required. You can define the output language,
      * maximum character length, and tone of voice. Additional instructions
      * on how to process the text can be provided in the context parameter.
@@ -51,11 +56,11 @@ class ContentSummarizeService extends SharpApiClient
      * for the Language Model, rather than a strict requirement,
      * to maintain the general sense of the outcome.
      *
-     * @param string $text The text to summarize
-     * @param string|null $language The language for the summarized text (optional)
-     * @param int|null $maxLength Maximum length of the summarized text (optional)
-     * @param string|null $voiceTone The tone of voice for the summarized text (optional)
-     * @param string|null $context Additional context for better summarization (optional)
+     * @param  string  $text  The text to summarize
+     * @param  string|null  $language  The language for the summarized text (optional)
+     * @param  int|null  $maxLength  Maximum length of the summarized text (optional)
+     * @param  string|null  $voiceTone  The tone of voice for the summarized text (optional)
+     * @param  string|null  $context  Additional context for better summarization (optional)
      * @return string The summarized text or an error message
      *
      * @throws GuzzleException
